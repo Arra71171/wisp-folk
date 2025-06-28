@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "wisp-heritage-app",
+    "slug": "wisp-heritage-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "scheme": "wispheritageapp",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.satya164.reactnavigationtemplate"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.satya164.reactnavigationtemplate"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-asset",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#ffffff",
+          "image": "./assets/splash-icon.png"
+        }
+      ],
+      "react-native-edge-to-edge"
+    ],
+    "extra": {
+      "supabaseUrl": "https://bhfmwopeuoduwzhvqaji.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoZm13b3BldW9kdXd6aHZxYWppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwMDAyMjgsImV4cCI6MjA2NjU3NjIyOH0.0EYUAqLjZ4wZwU5CGhrRzg7hY6ETv86KeJLXQ0hMi8Q"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+:root {
+  --color-primary: 12 210 255;
+  --color-accent: 255 0 128;
+  --color-surface: 13 13 13;
+  --color-on-surface: 245 245 245;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-surface: 250 250 250;
+    --color-on-surface: 20 20 20;
+  }
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
