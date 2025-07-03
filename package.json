@@ -1,0 +1,13 @@
+{
+  "name": "heritage-app",
+  "version": "1.0.0",
+  "description": "Heritage application with database seeding scripts",
+  "main": "index.js",
+  "scripts": {
+    "seed:db": "node scripts/seed-database.js",
+    "seed:check": "node scripts/check-database.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
