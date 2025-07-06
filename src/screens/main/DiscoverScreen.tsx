@@ -1,231 +1,307 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   FlatList,
-  SafeAreaView,
-  Pressable,
   TextInput,
   ScrollView,
   TouchableOpacity,
+  StyleSheet,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MainStackNavigationProp } from '../../navigation/types';
 import { Feather } from '@expo/vector-icons';
-import { supabase } from '../../lib/supabase';
-import { Quest } from '../../types/quest';
-
-// Import our new UI components
-import Card from '../../components/ui/Card';
-import SectionContainer from '../../components/ui/SectionContainer';
-import PrimaryButton from '../../components/ui/PrimaryButton';
-import Badge from '../../components/ui/Badge';
-
-// Import existing components
+import { useStories } from '../../hooks/useHeritage';
 import { QuestCard } from '../../components/heritage/QuestCard';
-import { QuestCardSkeleton } from '../../components/heritage/QuestCardSkeleton';
-import { FilterChip } from '../../components/ui/FilterChip';
 
-const skeletonData = Array(6).fill(0);
+
+import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Animatable from 'react-native-animatable';
+import { THEME } from '../../constants/theme';
 
 type TabType = 'stories' | 'codex';
 
-export function DiscoverScreen() {
+const StoriesTabContent = () => {
   const navigation = useNavigation<MainStackNavigationProp>();
-  const [loading, setLoading] = useState(true);
-  const [quests, setQuests] = useState<Quest[]>([]);
-  const [eras, setEras] = useState<string[]>(['All']);
+  const { data: quests, isLoading } = useStories();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedEra, setSelectedEra] = useState('All');
-  const [activeTab, setActiveTab] = useState<TabType>('stories');
 
-  useEffect(() => {
-    const fetchQuests = async () => {
-      setLoading(true);
-      const { data, error } = await supabase.from('quests').select('*');
-      if (error) {
-        console.error('Error fetching quests:', error);
-      } else {
-        setQuests(data as Quest[]);
-        const uniqueEras = ['All', ...new Set(data.map(q => q.era))];
-        setEras(uniqueEras);
-      }
-      setLoading(false);
-    };
+  const eras = quests ? ['All', ...new Set(quests.map(q => q.era))] : ['All'];
 
-    fetchQuests();
-  }, []);
+  const filteredQuests = quests
+    ? quests.filter(quest => {
+        const matchesEra = selectedEra === 'All' || quest.era === selectedEra;
+        const matchesSearch = quest.title.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesEra && matchesSearch;
+      })
+    : [];
 
-  const filteredQuests = useMemo(() => {
-    return quests.filter(quest => {
-      const matchesEra = selectedEra === 'All' || quest.era === selectedEra;
-      const matchesSearch = quest.title.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesEra && matchesSearch;
-    });
-  }, [quests, searchQuery, selectedEra]);
-
-  const codexCategories = [
-    { id: '1', title: 'Ancient Civilizations', icon: 'map-pin', count: 12 },
-    { id: '2', title: 'Mythology & Legends', icon: 'moon', count: 8 },
-    { id: '3', title: 'Historical Figures', icon: 'users', count: 15 },
-    { id: '4', title: 'Sacred Texts', icon: 'book', count: 6 },
-    { id: '5', title: 'Cultural Traditions', icon: 'coffee', count: 10 },
-    { id: '6', title: 'Archaeological Sites', icon: 'compass', count: 9 },
-  ];
-
-  const renderTabButton = (tab: TabType, label: string, icon: React.ComponentProps<typeof Feather>['name']) => (
-    <TouchableOpacity
-      className={`flex-1 flex-row items-center justify-center py-3 px-4 rounded-full ${
-        activeTab === tab 
-          ? 'bg-primary shadow-md shadow-primary/30' 
-          : 'bg-surface'
-      }`}
-      onPress={() => setActiveTab(tab)}
-    >
-      <Feather name={icon} size={16} className={`mr-2 ${activeTab === tab ? 'text-background' : 'text-text-secondary'}`} />
-      <Text className={`font-sans-medium ${activeTab === tab ? 'text-background' : 'text-text-secondary'}`}>
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
-
-  const renderHeader = () => (
-    <View className="px-4 pt-2 pb-4">
-      <View className="flex-row items-center justify-between mb-4">
-        <Text className="text-3xl font-sans-bold text-text-primary">Discover</Text>
-        <TouchableOpacity 
-          className="p-3 rounded-full bg-surface"
-          onPress={() => { /* Navigate to timeline */ }}
-        >
-          <Feather name="trello" size={20} className="text-primary" />
-        </TouchableOpacity>
+  return (
+    <Animatable.View animation="fadeIn" duration={500} style={styles.flexOne}>
+      <View style={styles.searchSection}>
+        <View style={styles.searchInputContainer}>
+          <Feather name="search" size={20} color={THEME.COLORS.textSecondary} />
+          <TextInput
+            placeholder="Search for a story..."
+            placeholderTextColor={THEME.COLORS.textSecondary}
+            style={styles.searchInput}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
       </View>
 
-      {/* Tab Navigation */}
-      <View className="flex-row space-x-2 mb-4 bg-surface p-1 rounded-full">
-        {renderTabButton('stories', 'Stories', 'book-open')}
-        {renderTabButton('codex', 'Codex', 'archive')}
-      </View>
-
-      {/* Search Bar */}
-      <View className="flex-row items-center bg-surface rounded-2xl p-3 mb-4">
-        <Feather name="search" size={20} className="text-primary mr-2" />
-        <TextInput
-          placeholder="Search for content..."
-          placeholderTextColor="#888"
-          className="flex-1 text-text-primary font-sans"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
-
-      {/* Era Filters - Only show for Stories tab */}
-      {activeTab === 'stories' && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {eras.map(era => (
-            <FilterChip
-              key={era}
-              label={era}
-              isSelected={era === selectedEra}
+      <View style={styles.chipScrollViewContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipContainer}>
+          {eras.map((era, index) => (
+            <TouchableOpacity
+              key={`${era}-${index}`}
               onPress={() => setSelectedEra(era)}
-            />
+              style={[styles.chip, era === selectedEra ? styles.chipSelected : styles.chipUnselected]}
+            >
+              <Text style={[styles.chipText, era === selectedEra ? styles.chipTextSelected : styles.chipTextUnselected]}>{era}</Text>
+            </TouchableOpacity>
           ))}
         </ScrollView>
-      )}
-    </View>
-  );
+      </View>
 
-  const renderStoriesContent = () => (
-    <FlatList
-      data={loading ? skeletonData : filteredQuests}
-      keyExtractor={(item, index) => loading ? index.toString() : (item as Quest).id}
-      numColumns={2}
-      renderItem={({ item, index }) =>
-        loading ? (
-          <QuestCardSkeleton />
-        ) : (
-          <View style={{ flex: 1, margin: 8 }}>
-            <QuestCard
-              quest={item as Quest}
-              onPress={() => navigation.navigate('QuestDetails', { questId: (item as Quest).id })}
-              index={index}
-            />
-          </View>
-        )
-      }
-      ListEmptyComponent={!loading ? renderEmptyState : null}
-      showsVerticalScrollIndicator={false}
-    />
-  );
-
-  const renderCodexContent = () => (
-    <ScrollView className="flex-1 px-4" showsVerticalScrollIndicator={false}>
-      <SectionContainer 
-        title="Knowledge Library"
-        subtitle="Explore ancient wisdom and historical knowledge"
-      >
-        <Text className="text-text-secondary font-sans mb-4">
-          Dive deep into the lore, characters, and cultural knowledge from around the world.
-        </Text>
-      </SectionContainer>
-
-      <View className="space-y-4">
-        {codexCategories.map((category) => (
-          <Card
-            key={category.id}
-            title={category.title}
-            subtitle={`${category.count} entries`}
-            ctaLabel="Explore"
-            onPress={() => {
-              // Navigate to category detail
-              console.log('Navigate to category:', category.title);
-            }}
-          >
-            <View className="flex-row items-center justify-between py-2">
-              <Feather name={category.icon as any} size={24} className="text-primary" />
-              <Feather name="chevron-right" size={20} className="text-primary" />
+      {isLoading && (
+        <FlatList
+          data={Array(3).fill(0)}
+          renderItem={() => (
+            <View style={styles.skeletonContainer}>
+              <View style={{ aspectRatio: 1, backgroundColor: THEME.COLORS.surface, borderRadius: THEME.RADIUS.l, opacity: 0.5 }} />
             </View>
-          </Card>
+          )}
+          showsVerticalScrollIndicator={false}
+          keyExtractor={(_, index) => index.toString()}
+        />
+      )}
+
+      {!isLoading && (
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {filteredQuests.length > 0 ? (
+            filteredQuests.map((item, index) => (
+              <View key={item.id} style={styles.questCardContainer}>
+                <QuestCard quest={item} index={index} onPress={() => navigation.navigate('QuestDetails', { questId: item.id })} />
+              </View>
+            ))
+          ) : (
+            <View style={styles.emptyListContainer}>
+              <Feather name="search" size={48} color={THEME.COLORS.textSecondary} style={styles.emptyListIcon} />
+              <Text style={styles.emptyListTitle}>No Stories Found</Text>
+              <Text style={styles.emptyListSubtitle}>Try adjusting your search or filters.</Text>
+            </View>
+          )}
+        </ScrollView>
+      )}
+    </Animatable.View>
+  );
+};
+
+const CodexTabContent = () => {
+  const navigation = useNavigation<MainStackNavigationProp>();
+  return (
+    <Animatable.View animation="fadeIn" duration={500} style={styles.codexContainer}>
+      <Feather name="book-open" size={48} color={THEME.COLORS.primary} style={styles.codexIcon} />
+      <Text style={styles.codexTitle}>The Codex Awaits</Text>
+      <Text style={styles.codexSubtitle}>
+        All discovered lore, characters, and artifacts are chronicled here.
+      </Text>
+      <TouchableOpacity onPress={() => navigation.navigate('Codex')} style={styles.codexButton}>
+        <Feather name="arrow-right-circle" size={20} color={THEME.COLORS.primary} style={styles.codexButtonIcon} />
+        <Text style={styles.codexButtonText}>Explore the Codex</Text>
+      </TouchableOpacity>
+    </Animatable.View>
+  );
+};
+
+const DiscoverScreen = () => {
+  const [activeTab, setActiveTab] = useState<TabType>('stories');
+  const tabs = [
+    { id: 'stories', label: 'Stories' },
+    { id: 'codex', label: 'Codex' },
+  ];
+
+  return (
+    <SafeAreaView style={styles.screen}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Discover</Text>
+      </View>
+
+      <View style={styles.tabContainer}>
+        {tabs.map(tab => (
+          <TouchableOpacity
+            key={tab.id}
+            onPress={() => setActiveTab(tab.id as TabType)}
+            style={[styles.tabButton, activeTab === tab.id && styles.tabButtonActive]}
+          >
+            <Text style={[styles.tabButtonText, activeTab === tab.id ? styles.tabButtonTextActive : styles.tabButtonTextInactive]}>
+              {tab.label}
+            </Text>
+          </TouchableOpacity>
         ))}
       </View>
 
-      {/* Featured Entry */}
-      <SectionContainer 
-        title="Featured Entry"
-        subtitle="Today's Highlight"
-      >
-        <Card
-          title="The Oracle of Delphi"
-          subtitle="Ancient Greek Prophecy"
-          description="Discover the mystical temple where ancient Greeks sought divine guidance and prophecies that shaped history."
-          ctaLabel="Read More"
-          onPress={() => {
-            // Navigate to featured entry
-            console.log('Navigate to featured entry');
-          }}
-        />
-      </SectionContainer>
-    </ScrollView>
-  );
-
-  const renderEmptyState = () => (
-    <View className="flex-1 items-center justify-center mt-20 px-8">
-      <Card
-        title="No Content Found"
-        subtitle="Try adjusting your search"
-        description="We couldn't find any content matching your criteria. Try a different search term or filter."
-      >
-        <View className="items-center py-4">
-          <Feather name="search" size={48} className="text-primary" />
-        </View>
-      </Card>
-    </View>
-  );
-
-  return (
-    <SafeAreaView className="flex-1 bg-background">
-      {renderHeader()}
-      {activeTab === 'stories' ? renderStoriesContent() : renderCodexContent()}
+      {activeTab === 'stories' ? <StoriesTabContent /> : <CodexTabContent />}
     </SafeAreaView>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  flexOne: { flex: 1 },
+  screen: {
+    flex: 1,
+    backgroundColor: THEME.COLORS.background,
+  },
+  header: {
+    paddingHorizontal: THEME.SPACING.l,
+    paddingTop: THEME.SPACING.m,
+    paddingBottom: THEME.SPACING.m,
+  },
+  headerTitle: {
+    fontFamily: THEME.FONTS.serifBold,
+    fontSize: 34,
+    color: THEME.COLORS.textPrimary,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    marginHorizontal: THEME.SPACING.l,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.COLORS.border,
+  },
+  tabButton: {
+    flex: 1,
+    alignItems: 'center',
+    paddingBottom: THEME.SPACING.m,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  tabButtonActive: {
+    borderBottomColor: THEME.COLORS.primary,
+  },
+  tabButtonText: {
+    fontFamily: THEME.FONTS.sansBold,
+    fontSize: 16,
+  },
+  tabButtonTextActive: {
+    color: THEME.COLORS.primary,
+  },
+  tabButtonTextInactive: {
+    color: THEME.COLORS.textSecondary,
+  },
+  // Stories Tab
+  searchSection: {
+    paddingHorizontal: THEME.SPACING.l,
+    marginBottom: THEME.SPACING.m,
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: THEME.COLORS.surface,
+    borderRadius: THEME.RADIUS.full,
+    paddingHorizontal: THEME.SPACING.m,
+  },
+  searchInput: {
+    flex: 1,
+    height: 48,
+    color: THEME.COLORS.textPrimary,
+    fontFamily: THEME.FONTS.sans,
+    marginLeft: THEME.SPACING.s,
+  },
+  chipScrollViewContainer: {
+    marginBottom: THEME.SPACING.m,
+  },
+  chipContainer: {
+    paddingHorizontal: THEME.SPACING.l,
+  },
+  chip: {
+    paddingVertical: THEME.SPACING.s,
+    paddingHorizontal: THEME.SPACING.m,
+    borderRadius: THEME.RADIUS.full,
+    marginRight: THEME.SPACING.s,
+  },
+  chipSelected: {
+    backgroundColor: THEME.COLORS.primary,
+  },
+  chipUnselected: {
+    backgroundColor: THEME.COLORS.surface,
+  },
+  chipText: {
+    fontFamily: THEME.FONTS.sans,
+    fontSize: 14,
+  },
+  chipTextSelected: {
+    color: '#FFFFFF',
+    fontFamily: THEME.FONTS.sansBold,
+  },
+  chipTextUnselected: {
+    color: THEME.COLORS.textPrimary,
+  },
+  skeletonContainer: {
+    paddingHorizontal: THEME.SPACING.l,
+    marginBottom: THEME.SPACING.m,
+  },
+  questCardContainer: {
+    paddingHorizontal: THEME.SPACING.l,
+    marginBottom: THEME.SPACING.m,
+  },
+  emptyListContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 80,
+  },
+  emptyListIcon: {
+    marginBottom: THEME.SPACING.m,
+  },
+  emptyListTitle: {
+    fontSize: 18,
+    fontFamily: THEME.FONTS.sansBold,
+    color: THEME.COLORS.textPrimary,
+  },
+  emptyListSubtitle: {
+    color: THEME.COLORS.textSecondary,
+    marginTop: THEME.SPACING.xs,
+  },
+  // Codex Tab
+  codexContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: THEME.SPACING.l,
+  },
+  codexIcon: {
+    marginBottom: THEME.SPACING.m,
+  },
+  codexTitle: {
+    fontFamily: THEME.FONTS.serifBold,
+    fontSize: 24,
+    color: THEME.COLORS.textPrimary,
+    textAlign: 'center',
+    marginBottom: THEME.SPACING.s,
+  },
+  codexSubtitle: {
+    color: THEME.COLORS.textSecondary,
+    textAlign: 'center',
+    marginBottom: THEME.SPACING.l,
+    lineHeight: 22,
+  },
+  codexButton: {
+    backgroundColor: 'rgba(244, 114, 182, 0.1)',
+    borderRadius: THEME.RADIUS.full,
+    paddingHorizontal: THEME.SPACING.l,
+    paddingVertical: THEME.SPACING.m,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  codexButtonIcon: {
+    marginRight: THEME.SPACING.s,
+  },
+  codexButtonText: {
+    fontFamily: THEME.FONTS.sansBold,
+    color: THEME.COLORS.primary,
+  },
+});
+
+export default DiscoverScreen;

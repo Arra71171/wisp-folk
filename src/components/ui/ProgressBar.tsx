@@ -1,52 +1,71 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, Animated, ViewProps } from 'react-native';
+import { View, Text, Animated, StyleSheet, ViewProps } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { THEME } from '../../constants/theme';
 
 interface ProgressBarProps extends ViewProps {
   progress: number; // 0 to 1
   label?: string;
-  color?: string;
   height?: number;
 }
+
+const createStyles = (height: number) =>
+  StyleSheet.create({
+    label: {
+      fontFamily: THEME.FONTS.sans,
+      fontSize: 12,
+      color: THEME.COLORS.textSecondary,
+      marginBottom: THEME.SPACING.xs,
+    },
+    track: {
+      height,
+      backgroundColor: THEME.COLORS.surface,
+      borderRadius: height / 2,
+      overflow: 'hidden',
+    },
+    fill: {
+      height: '100%',
+      borderRadius: height / 2,
+    },
+  });
 
 const ProgressBar: React.FC<ProgressBarProps> = ({
   progress,
   label,
-  color = '#61E7D1', // primary
-  height = 12,
+  height = 10,
   style,
   ...props
 }) => {
-  const animated = useRef(new Animated.Value(0)).current;
+  const animatedValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.timing(animated, {
+    Animated.timing(animatedValue, {
       toValue: progress,
-      duration: 600,
-      useNativeDriver: false,
+      duration: 800,
+      useNativeDriver: false, // width animation is not supported by native driver
     }).start();
   }, [progress]);
 
-  const widthInterpolate = animated.interpolate({
+  const widthInterpolated = animatedValue.interpolate({
     inputRange: [0, 1],
     outputRange: ['0%', '100%'],
+    extrapolate: 'clamp',
   });
+
+  const styles = React.useMemo(() => createStyles(height), [height]);
 
   return (
     <View style={style} {...props}>
-      {label && (
-        <Text className="mb-1 text-xs font-medium font-sans text-text-secondary">{label}</Text>
-      )}
-      <View
-        className="w-full bg-surface rounded-full overflow-hidden"
-        style={{ height }}
-      >
-        <Animated.View
-          className="h-full rounded-full"
-          style={{
-            width: widthInterpolate,
-            backgroundColor: color,
-          }}
-        />
+      {label && <Text style={styles.label}>{label}</Text>}
+      <View style={styles.track}>
+        <Animated.View style={{ width: widthInterpolated }}>
+          <LinearGradient
+            colors={[THEME.COLORS.primary, THEME.COLORS.accent]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.fill}
+          />
+        </Animated.View>
       </View>
     </View>
   );

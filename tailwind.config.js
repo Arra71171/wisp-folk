@@ -10,12 +10,12 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: '#0D0C1D',
-        surface: '#1D1B31',
-        primary: '#39E4E4',
-        accent: '#F7B801',
-        'text-primary': '#F0F0F0',
-        'text-secondary': '#A0A0A0',
+        primary: '#7c4dff', // Vibrant purple for buttons and interactive elements
+        secondary: '#4F527D', // Kept for secondary elements if needed
+        accent: '#FF00FF', // Magenta for special highlights
+        background: '#1a1a2e', // Deep dark purple
+        text: '#F0F0F0', // Soft white/light gray
+        textSecondary: '#A9A9A9',
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

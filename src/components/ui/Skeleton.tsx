@@ -10,27 +10,30 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { THEME } from '../../constants/theme';
 
 interface SkeletonProps {
-  className?: string;
   style?: StyleProp<ViewStyle>;
   children?: React.ReactNode;
   width?: DimensionValue;
   height?: DimensionValue;
 }
 
-const Skeleton = ({ className, style, children, width, height }: SkeletonProps) => {
+const Skeleton = ({ style, children, width, height }: SkeletonProps) => {
   const progress = useSharedValue(-1);
 
   useEffect(() => {
-    progress.value = withRepeat(withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.ease) }), -1);
-  }, []);
+    progress.value = withRepeat(
+      withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
+      -1
+    );
+  }, [progress]);
 
   const animatedStyle = useAnimatedStyle(() => {
     const translateX = interpolate(
       progress.value,
       [-1, 1],
-      [-300, 300], // Adjust based on component width
+      [-400, 400], // This value should be wider than the widest skeleton
       Extrapolate.CLAMP
     );
     return {
@@ -39,21 +42,19 @@ const Skeleton = ({ className, style, children, width, height }: SkeletonProps) 
   });
 
   const containerStyle = StyleSheet.flatten([
+    styles.container,
     { width, height },
     style,
   ]);
 
   return (
-    <View
-      style={containerStyle}
-      className={`bg-gray-200 dark:bg-gray-700 rounded-md overflow-hidden ${className}`}
-    >
+    <View style={containerStyle}>
       <Animated.View style={[StyleSheet.absoluteFill, animatedStyle]}>
         <LinearGradient
           style={StyleSheet.absoluteFill}
           colors={[
             'transparent',
-            'rgba(255, 255, 255, 0.1)',
+            'rgba(244, 114, 182, 0.1)', // primary with low opacity
             'transparent',
           ]}
           start={{ x: 0, y: 0.5 }}
@@ -64,5 +65,13 @@ const Skeleton = ({ className, style, children, width, height }: SkeletonProps) 
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: THEME.COLORS.surface,
+    borderRadius: THEME.RADIUS.m,
+    overflow: 'hidden',
+  },
+});
 
 export default Skeleton;

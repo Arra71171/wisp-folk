@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, ViewProps } from 'react-native';
+import { View, Text, StyleSheet, ViewProps } from 'react-native';
+import { THEME } from '../../constants/theme';
 
 interface SectionContainerProps extends ViewProps {
   title: string;
@@ -15,20 +16,36 @@ const SectionContainer: React.FC<SectionContainerProps> = ({
   ...props
 }) => {
   return (
-    <View
-      className="my-8 border-l-4 border-primary pl-4"
-      style={style}
-      {...props}
-    >
-      <Text className="text-2xl font-serif-bold text-text-primary">{title}</Text>
-      {subtitle && (
-        <Text className="text-base font-sans-medium text-primary/80 mt-1 mb-4">{subtitle}</Text>
-      )}
-      <View className={subtitle ? '' : 'mt-4'}>
-        {children}
-      </View>
+    <View style={[styles.container, style]} {...props}>
+      <Text style={styles.title}>{title}</Text>
+      {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+      <View style={styles.childrenContainer}>{children}</View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginVertical: THEME.SPACING.l,
+    borderLeftWidth: 3,
+    borderLeftColor: THEME.COLORS.primary,
+    paddingLeft: THEME.SPACING.m,
+  },
+  title: {
+    fontFamily: THEME.FONTS.serifBold,
+    fontSize: 28,
+    color: THEME.COLORS.textPrimary,
+    marginBottom: THEME.SPACING.xs,
+  },
+  subtitle: {
+    fontFamily: THEME.FONTS.sans,
+    fontSize: 16,
+    color: THEME.COLORS.textSecondary,
+    marginBottom: THEME.SPACING.m,
+  },
+  childrenContainer: {
+    marginTop: THEME.SPACING.m,
+  },
+});
 
 export default SectionContainer;

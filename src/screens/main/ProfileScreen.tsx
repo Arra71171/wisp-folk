@@ -1,236 +1,115 @@
 import React from 'react';
-import * as Animatable from 'react-native-animatable';
 import {
   View,
   Text,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import { useAuthStore } from '../../stores/authStore';
-import { useUserProgress } from '../../context/UserProgressContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { MainStackNavigationProp } from '../../navigation/types';
 import { Feather } from '@expo/vector-icons';
-
-// Import our new UI components
-import Card from '../../components/ui/Card';
-import SectionContainer from '../../components/ui/SectionContainer';
+import { useAuthStore } from '../../stores/authStore';
 import Avatar from '../../components/ui/Avatar';
 import ProgressBar from '../../components/ui/ProgressBar';
-import Badge from '../../components/ui/Badge';
-import PrimaryButton from '../../components/ui/PrimaryButton';
 
-// Import existing components
-import { StatTile } from '../../components/profile/StatTile';
-import { BadgeCard } from '../../components/profile/BadgeCard';
-import { SettingsRow } from '../../components/profile/SettingsRow';
-import { ProfileScreenSkeleton } from '../../components/profile/ProfileScreenSkeleton';
-
-// Dummy data for now
+// Dummy data - replace with hooks
 const user = {
-  name: 'Alex',
-  email: 'alex.doe@example.com',
-  avatar: 'https://picsum.photos/seed/user/200/200',
+  name: 'Aria',
+  level: 15,
+  title: 'Cosmic Chronicler',
+  xp: 1200,
+  xpToNextLevel: 2000,
+  stats: {
+    stories: 42,
+    wisdoms: 118,
+    rank: 1,
+  },
 };
 
-type Badge = {
-  id: string;
-  name: string;
-  icon: React.ComponentProps<typeof Feather>['name'];
-};
-
-const badges: Badge[] = [
-  { id: '1', name: 'First Quest', icon: 'shield' },
-  { id: '2', name: 'Lore Master', icon: 'book-open' },
-  { id: '3', name: 'Explorer', icon: 'compass' },
-  { id: '4', name: 'Time Traveler', icon: 'clock' },
+const achievements = [
+  { id: '1', name: 'First Steps', icon: 'shield', unlocked: true },
+  { id: '2', name: 'Lore Master', icon: 'book-open', unlocked: true },
+  { id: '3', name: 'Explorer', icon: 'compass', unlocked: true },
+  { id: '4', name: 'Time Traveler', icon: 'clock', unlocked: false },
+  { id: '5', name: 'Sage', icon: 'award', unlocked: false },
+  { id: '6', name: 'Historian', icon: 'map', unlocked: false },
 ];
 
-const XP_PER_LEVEL = 100;
+const StatCard = ({ icon, label, value, onPress }: { icon: any; label: string; value: string | number; onPress?: () => void }) => (
+  <TouchableOpacity onPress={onPress} className="bg-surface rounded-xl flex-1 items-center justify-center p-4">
+    <Feather name={icon} size={24} className="text-primary mb-2" />
+    <Text className="font-bold text-lg text-text-primary">{value}</Text>
+    <Text className="text-xs text-text-secondary">{label}</Text>
+  </TouchableOpacity>
+);
+
+const SettingsRow = ({ icon, text, onPress, isDestructive = false }: { icon: any; text: string; onPress?: () => void; isDestructive?: boolean }) => (
+  <TouchableOpacity onPress={onPress} className="flex-row items-center bg-surface p-4 rounded-lg mb-3">
+    <Feather name={icon} size={20} className={isDestructive ? 'text-red-500' : 'text-primary'} />
+    <Text className={`flex-1 ml-4 ${isDestructive ? 'text-red-500' : 'text-text-primary'}`}>{text}</Text>
+    {!isDestructive && <Feather name="chevron-right" size={20} className="text-text-secondary" />}
+  </TouchableOpacity>
+);
 
 export function ProfileScreen() {
   const { signOut } = useAuthStore();
-  const { playerLevel, playerXP, completedQuests, loading } = useUserProgress();
-
-  const currentLevelXP = playerXP % XP_PER_LEVEL;
-  const xpForNextLevel = XP_PER_LEVEL;
-  const xpProgress = currentLevelXP / xpForNextLevel;
-
-  if (loading) {
-    return (
-      <SafeAreaView className="flex-1 bg-gradient-to-b from-amber-50 to-orange-50">
-        <ProfileScreenSkeleton />
-      </SafeAreaView>
-    );
-  }
+  const navigation = useNavigation<MainStackNavigationProp>();
 
   return (
-    <SafeAreaView className="flex-1 bg-gradient-to-b from-amber-50 to-orange-50">
-      <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
+    <SafeAreaView edges={['top']} className="flex-1 bg-background">
+      <ScrollView contentContainerClassName="p-6">
         {/* Header */}
-        <Animatable.View animation="fadeInDown" duration={500} useNativeDriver className="p-6">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-1">
-              <Text className="text-3xl font-bold text-amber-900">{user.name}</Text>
-              <Text className="text-amber-700">{user.email}</Text>
-            </View>
-            <TouchableOpacity className="p-2 rounded-full bg-white/80 shadow-sm">
-              <Feather name="settings" size={20} color="#92400e" />
-            </TouchableOpacity>
-          </View>
-        </Animatable.View>
+        <View className="flex-row items-center justify-between mb-8">
+          <Text className="text-4xl font-serif-bold text-text-primary">Profile</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Settings')} className="w-10 h-10 bg-surface rounded-full items-center justify-center">
+            <Feather name="settings" size={20} className="text-text-secondary" />
+          </TouchableOpacity>
+        </View>
 
-        {/* Avatar & Level */}
-        <Animatable.View animation="fadeInUp" duration={500} delay={100} useNativeDriver className="items-center my-4">
-          <Card
-            title={`Level ${playerLevel}`}
-            subtitle="Your current rank"
-            description="Keep exploring to level up and unlock new content."
-          >
-            <View className="items-center py-4">
-              <Avatar 
-                size={80}
-                source={{ uri: user.avatar }}
-                ringColor="#f59e42"
-              />
-              <View className="mt-4 w-full">
-                <ProgressBar 
-                  progress={xpProgress}
-                  label={`${currentLevelXP} / ${xpForNextLevel} XP`}
-                  color="#f59e42"
-                  height={12}
-                />
-                <Text className="text-center text-amber-700 mt-2 text-sm">
-                  {xpForNextLevel - currentLevelXP} XP to next level
-                </Text>
-              </View>
-            </View>
-          </Card>
-        </Animatable.View>
+        {/* Profile Card */}
+        <View className="bg-surface rounded-2xl p-5 items-center mb-8">
+          <Avatar initials="A" size={80} />
+          <Text className="text-2xl font-bold text-text-primary mt-4">{user.name}</Text>
+          <Text className="text-sm text-primary font-bold">{user.title}</Text>
+          <View className="w-full mt-4">
+            <Text className="text-xs text-text-secondary mb-1">Level {user.level}</Text>
+            <ProgressBar progress={user.xp / user.xpToNextLevel} />
+            <Text className="text-xs text-text-secondary text-right mt-1">{user.xp} / {user.xpToNextLevel} XP</Text>
+          </View>
+        </View>
 
         {/* Stats */}
-        <Animatable.View animation="fadeInUp" duration={500} delay={200} useNativeDriver className="mt-4">
-          <SectionContainer 
-            title="Your Stats"
-            subtitle="Track your progress"
-          >
-            <View className="flex-row justify-between">
-              <Card
-                title={playerLevel.toString()}
-                subtitle="Level"
-                onPress={() => {}}
-              >
-                <View className="items-center py-2">
-                  <Feather name="star" size={24} color="#f59e42" />
+        <View className="flex-row space-x-4 mb-8">
+          <StatCard icon="book-open" label="Stories Read" value={user.stats.stories} onPress={() => console.log('Stories Read pressed')} />
+          <StatCard icon="key" label="Wisdoms Unlocked" value={user.stats.wisdoms} onPress={() => console.log('Wisdoms Unlocked pressed')} />
+          <StatCard icon="bar-chart-2" label="Global Rank" value={`#${user.stats.rank}`} onPress={() => console.log('Global Rank pressed')} />
+        </View>
+        {/* Achievements */}
+        <View className="mb-8">
+          <Text className="text-2xl font-serif-bold text-text-primary mb-4">Achievements</Text>
+          <View className="flex-row flex-wrap -mx-2">
+            {achievements.map(badge => (
+              <View key={badge.id} className="w-1/3 p-2 items-center">
+                <View className={`w-20 h-20 rounded-full items-center justify-center ${badge.unlocked ? 'bg-surface' : 'bg-surface/50 border-2 border-dashed border-text-secondary'}`}>
+                  <Feather name={badge.icon as any} size={32} className={`${badge.unlocked ? 'text-accent' : 'text-text-secondary'}`} />
                 </View>
-              </Card>
-              <Card
-                title={playerXP.toString()}
-                subtitle="Total XP"
-                onPress={() => {}}
-              >
-                <View className="items-center py-2">
-                  <Feather name="trending-up" size={24} color="#f59e42" />
-                </View>
-              </Card>
-              <Card
-                title={completedQuests.length.toString()}
-                subtitle="Quests"
-                onPress={() => {}}
-              >
-                <View className="items-center py-2">
-                  <Feather name="compass" size={24} color="#f59e42" />
-                </View>
-              </Card>
-            </View>
-          </SectionContainer>
-        </Animatable.View>
-
-        {/* Badges */}
-        <Animatable.View animation="fadeInUp" duration={500} delay={300} useNativeDriver className="mt-6">
-          <SectionContainer 
-            title="Achievements"
-            subtitle="Your earned badges"
-          >
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="py-2">
-              {badges.map(badge => (
-                <View key={badge.id} className="mr-4">
-                  <Badge
-                    icon={<Feather name={badge.icon} size={20} color="white" />}
-                    label={badge.name}
-                    color="#f59e42"
-                    size={60}
-                  />
-                </View>
-              ))}
-            </ScrollView>
-          </SectionContainer>
-        </Animatable.View>
-
-        {/* Recent Activity */}
-        <Animatable.View animation="fadeInUp" duration={500} delay={400} useNativeDriver className="mt-6">
-          <SectionContainer 
-            title="Recent Activity"
-            subtitle="Your latest achievements"
-          >
-            <Card
-              title="Completed 'The Oracle's Prophecy'"
-              subtitle="2 hours ago"
-              description="You successfully completed this ancient Greek story and unlocked new wisdom."
-            >
-              <View className="flex-row items-center justify-between py-2">
-                <View className="flex-row items-center">
-                  <Feather name="check-circle" size={20} color="#10b981" />
-                  <Text className="ml-2 text-green-600 font-medium">+50 XP earned</Text>
-                </View>
-                <Feather name="chevron-right" size={20} color="#f59e42" />
+                <Text className={`text-center text-xs mt-2 ${badge.unlocked ? 'text-text-primary' : 'text-text-secondary'}`}>{badge.name}</Text>
               </View>
-            </Card>
-          </SectionContainer>
-        </Animatable.View>
+            ))}
+          </View>
+        </View>
 
         {/* Settings */}
-        <Animatable.View animation="fadeInUp" duration={500} delay={500} useNativeDriver className="mt-6">
-          <SectionContainer 
-            title="Account Settings"
-            subtitle="Manage your profile and preferences"
-          >
-            <View className="space-y-2">
-              <Card
-                title="Account"
-                subtitle="Profile information"
-                ctaLabel="Edit"
-                onPress={() => {}}
-              />
-              <Card
-                title="Notifications"
-                subtitle="Manage alerts and updates"
-                ctaLabel="Configure"
-                onPress={() => {}}
-              />
-              <Card
-                title="Privacy & Security"
-                subtitle="Data and privacy settings"
-                ctaLabel="Settings"
-                onPress={() => {}}
-              />
-              <Card
-                title="Help & Support"
-                subtitle="Get help and contact support"
-                ctaLabel="Contact"
-                onPress={() => {}}
-              />
-            </View>
-          </SectionContainer>
-        </Animatable.View>
-
-        {/* Sign Out */}
-        <Animatable.View animation="fadeInUp" duration={500} delay={600} useNativeDriver className="mt-6 px-6">
-          <PrimaryButton
-            title="Sign Out"
-            icon="log-out"
-            onPress={signOut}
-          />
-        </Animatable.View>
+        <View>
+          <Text className="text-2xl font-serif-bold text-text-primary mb-4">Settings</Text>
+          <SettingsRow icon="bell" text="Notifications & Sounds" />
+          <SettingsRow icon="user" text="Account Information" />
+          <SettingsRow icon="shield" text="Privacy & Security" />
+          <SettingsRow icon="help-circle" text="Help & Support" />
+          <View className="h-4" />
+          <SettingsRow icon="log-out" text="Sign Out" onPress={signOut} isDestructive />
+        </View>
 
       </ScrollView>
     </SafeAreaView>

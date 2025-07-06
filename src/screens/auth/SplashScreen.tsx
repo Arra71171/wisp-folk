@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, Text } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
+import { View } from 'react-native';
+import LottieView from 'lottie-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
@@ -19,11 +18,15 @@ const SplashScreen = () => {
   }, [navigation]);
 
   return (
-    <SafeAreaView className="flex-1 bg-surface justify-center items-center">
-      <Feather name="wind" size={64} className="text-accent" />
-      <Text className="text-onSurface text-5xl font-bold mt-4">Wisp</Text>
-      <Text className="text-onSurface/60 text-lg">Discover Your Heritage</Text>
-    </SafeAreaView>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <LottieView
+        source={require('../../../assets/animations/splash-screen.json')}
+        autoPlay
+        loop={false}
+        onAnimationFinish={() => navigation.replace('Onboarding')}
+        style={{ width: 200, height: 200 }}
+      />
+    </View>
   );
 };
 

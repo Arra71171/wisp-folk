@@ -1,21 +1,24 @@
 import React, { useRef, useEffect } from 'react';
 import { Modal as RNModal, View, Text, TouchableOpacity, Animated, StyleSheet } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { THEME } from '../../constants/theme';
 
 interface ModalProps {
   visible: boolean;
   onClose: () => void;
   title?: string;
   children: React.ReactNode;
+  showCloseButton?: boolean;
 }
 
-const Modal: React.FC<ModalProps> = ({ visible, onClose, title, children }) => {
+const Modal: React.FC<ModalProps> = ({ visible, onClose, title, children, showCloseButton = true }) => {
   const slideAnim = useRef(new Animated.Value(300)).current;
 
   useEffect(() => {
     if (visible) {
-      Animated.timing(slideAnim, {
+      Animated.spring(slideAnim, {
         toValue: 0,
-        duration: 300,
+        friction: 8,
         useNativeDriver: true,
       }).start();
     } else {
@@ -25,7 +28,7 @@ const Modal: React.FC<ModalProps> = ({ visible, onClose, title, children }) => {
         useNativeDriver: true,
       }).start();
     }
-  }, [visible]);
+  }, [visible, slideAnim]);
 
   return (
     <RNModal
@@ -34,37 +37,65 @@ const Modal: React.FC<ModalProps> = ({ visible, onClose, title, children }) => {
       animationType="none"
       onRequestClose={onClose}
     >
-      <TouchableOpacity
-        className="flex-1 bg-black/40 justify-end"
-        activeOpacity={1}
-        onPress={onClose}
-        style={{ flex: 1 }}
-      >
+      <View style={styles.backdrop}>
+        <TouchableOpacity
+          style={StyleSheet.absoluteFill}
+          activeOpacity={1}
+          onPress={onClose}
+        />
         <Animated.View
-          className="bg-white dark:bg-gray-900 rounded-t-3xl p-6 shadow-lg"
-          style={[
-            { transform: [{ translateY: slideAnim }] },
-            styles.modalContainer,
-          ]}
+          style={[styles.modalContainer, { transform: [{ translateY: slideAnim }] }]}
         >
           {title && (
-            <Text className="text-lg font-bold mb-2 text-gray-900 dark:text-white text-center">
-              {title}
-            </Text>
+            <Text style={styles.title}>{title}</Text>
+          )}
+          {showCloseButton && (
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <Feather name="x" size={24} color={THEME.COLORS.textSecondary} />
+            </TouchableOpacity>
           )}
           {children}
         </Animated.View>
-      </TouchableOpacity>
+      </View>
     </RNModal>
   );
 };
 
 const styles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(19, 17, 28, 0.7)',
+    justifyContent: 'flex-end',
+  },
   modalContainer: {
-    minHeight: 120,
-    minWidth: '80%',
-    alignSelf: 'center',
+    backgroundColor: THEME.COLORS.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingTop: 48, // Make space for title and close button
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 10,
+    minHeight: 200,
+  },
+  title: {
+    fontFamily: 'CormorantGaramond-Bold',
+    fontSize: 28,
+    color: THEME.COLORS.textPrimary,
+    textAlign: 'center',
+    position: 'absolute',
+    top: 16,
+    left: 60,
+    right: 60,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    padding: 8,
   },
 });
 
-export default Modal; 
+export default Modal;

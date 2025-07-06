@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,6 +13,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { SignupSchema } from '../../utils/validation';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
+import { THEME } from '../../constants/theme';
 
 type SignupScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Signup'>;
 type FormData = z.infer<typeof SignupSchema>;
@@ -27,7 +28,7 @@ const SignupScreen = () => {
     defaultValues: { fullName: '', email: '', password: '' },
   });
 
-    const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
     setLoading(true);
     const { error } = await signUp(data.email, data.password, data.fullName);
     setLoading(false);
@@ -41,12 +42,12 @@ const SignupScreen = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}>
-        <View className="items-center mb-10">
-          <Feather name="user-plus" size={48} className="text-primary" />
-          <Text className="text-text-primary text-4xl font-sans font-bold mt-4">Create Account</Text>
-          <Text className="text-text-secondary font-sans text-lg">Join the Wisp community.</Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <View style={styles.headerContainer}>
+          <Feather name="user-plus" size={48} color={THEME.COLORS.primary} />
+          <Text style={styles.title}>Create Account</Text>
+          <Text style={styles.subtitle}>Join the Wisp community.</Text>
         </View>
 
         <Controller
@@ -97,17 +98,61 @@ const SignupScreen = () => {
           )}
         />
 
-        <Button title="Create Account" onPress={handleSubmit(onSubmit)} loading={loading} style={{ marginTop: 20 }} />
+        <Button title="Create Account" onPress={handleSubmit(onSubmit)} loading={loading} style={styles.button} />
 
-        <TouchableOpacity onPress={() => navigation.navigate('Login')} className="mt-6 items-center">
-          <Text className="text-center text-text-secondary font-sans">
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.signinContainer}>
+          <Text style={styles.signinText}>
             Already have an account?{' '}
-            <Text className="text-primary font-sans font-semibold">Sign In</Text>
+            <Text style={styles.signinLink}>Sign In</Text>
           </Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: THEME.COLORS.background,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: THEME.SPACING.xl,
+  },
+  headerContainer: {
+    alignItems: 'center',
+    marginBottom: THEME.SPACING.xxl,
+  },
+  title: {
+    fontFamily: 'CormorantGaramond-Bold',
+    fontSize: 40,
+    color: THEME.COLORS.textPrimary,
+    marginTop: THEME.SPACING.m,
+  },
+  subtitle: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 18,
+    color: THEME.COLORS.textSecondary,
+    marginTop: THEME.SPACING.xs,
+  },
+  button: {
+    marginTop: THEME.SPACING.l,
+  },
+  signinContainer: {
+    marginTop: THEME.SPACING.xl,
+    alignItems: 'center',
+  },
+  signinText: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 14,
+    color: THEME.COLORS.textSecondary,
+  },
+  signinLink: {
+    fontFamily: 'Sora-Bold',
+    color: THEME.COLORS.primary,
+  },
+});
 
 export default SignupScreen;

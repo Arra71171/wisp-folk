@@ -6,22 +6,26 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   ImageBackground,
+  StyleSheet,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import { useStories, useUserProgress, useUpdateProgress } from '../../hooks/useHeritage';
-import Button from '../../components/ui/Button';
+import { StoryReaderScreenRouteProp } from '../../navigation/types';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Animatable from 'react-native-animatable';
+import { Button } from '../../components/ui/Button';
 
-// Helper to create a placeholder image from the story title
 const getPlaceholderUri = (title: string) => {
   const seed = title.replace(/\s/g, '');
-  return `https://picsum.photos/seed/${seed}/800/400`;
+  return `https://picsum.photos/seed/${seed}/800/600`;
 };
 
 export function StoryReaderScreen() {
   const navigation = useNavigation();
-  const route = useRoute();
-  const { storyId } = route.params as { storyId: string };
+  const route = useRoute<StoryReaderScreenRouteProp>();
+  const { storyId } = route.params;
 
   const { data: stories, isLoading: storiesLoading } = useStories();
   const { data: progress, isLoading: progressLoading } = useUserProgress();
@@ -47,79 +51,122 @@ export function StoryReaderScreen() {
     });
   };
 
-  if (storiesLoading) {
+  if (storiesLoading || progressLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-amber-50">
-        <ActivityIndicator size="large" color="#c27803" />
-      </View>
+      <SafeAreaView className="flex-1 bg-background items-center justify-center">
+        <ActivityIndicator size="large" color="#f472b6" />
+      </SafeAreaView>
     );
   }
 
   if (!story) {
     return (
-      <View className="flex-1 items-center justify-center bg-red-50 p-4">
-        <Feather name="alert-circle" size={48} color="#b91c1c" />
-        <Text className="mt-4 text-xl font-bold text-red-800">Story Not Found</Text>
-        <Text className="mt-2 text-center text-red-600">
-          We couldn't find the story you were looking for. It might have been removed.
+      <SafeAreaView className="flex-1 bg-background items-center justify-center p-6">
+        <Feather name="alert-circle" size={48} className="text-red-500" />
+        <Text className="mt-4 text-2xl font-serif-bold text-text-primary text-center">Story Not Found</Text>
+        <Text className="mt-2 text-center text-text-secondary">
+          We couldn't find the story you were looking for. It might have been removed or is lost in time.
         </Text>
-        <Button title="Go Back" onPress={() => navigation.goBack()} className="mt-6" />
-      </View>
+        <View className="mt-6 w-full">
+            <Button title="Go Back" onPress={() => navigation.goBack()} variant="primary" />
+        </View>
+      </SafeAreaView>
     );
   }
 
   const isCompleted = userProgress?.status === 'completed';
 
   return (
-    <ScrollView className="flex-1 bg-white">
-      {/* Header Image */}
-      <ImageBackground 
-        source={{ uri: getPlaceholderUri(story.title) }} 
-        className="h-64 justify-end"
-      >
-        <View className="bg-gradient-to-t from-black/80 via-black/50 to-transparent p-6">
-          <Text className="text-3xl font-bold text-white tracking-tight">{story.title}</Text>
-          <Text className="text-lg text-white/80 mt-1">from {story.origin_culture} heritage</Text>
+    <View className="flex-1 bg-background">
+      <ScrollView>
+        <ImageBackground
+          source={{ uri: getPlaceholderUri(story.title) }}
+          style={styles.headerImage}
+        >
+          <LinearGradient
+            colors={['transparent', 'rgba(28, 22, 45, 0.8)', '#1C162D']}
+            style={styles.gradient}
+          />
+          <Animatable.View animation="fadeInUp" duration={800} style={styles.headerContent}>
+            <Text className="text-3xl font-serif-bold text-white text-center tracking-tight">{story.title}</Text>
+            <Text className="text-lg text-white/80 mt-2 text-center">from {story.origin_culture} heritage</Text>
+          </Animatable.View>
+        </ImageBackground>
+
+        <View className="p-6 -mt-8 bg-background rounded-t-3xl">
+          <Text style={styles.storyContent}>
+            {story.content}
+          </Text>
+
+          {/* Wisdom Lesson Section */}
+          <Animatable.View animation="fadeInUp" duration={800} delay={300} className="mt-8">
+            <View className="bg-surface p-6 rounded-2xl border border-primary/20 items-center">
+              <Feather name={isCompleted ? "check-circle" : "unlock"} size={32} className="text-primary mb-3" />
+              <Text className="text-2xl font-serif-bold text-text-primary text-center mb-2">
+                {isCompleted ? 'Wisdom Unlocked' : 'Unlock the Hidden Wisdom'}
+              </Text>
+              <Text className="text-text-secondary text-center mb-6">
+                {isCompleted
+                  ? `The lesson from "${story.wisdom_title}" has been added to your collection.`
+                  : 'Complete this story to reveal its profound lesson and earn XP.'}
+              </Text>
+              {!isCompleted && (
+                <Button
+                  title={isUpdating ? 'Unlocking...' : 'Unlock Wisdom'}
+                  onPress={handleUnlockWisdom}
+                  disabled={isUpdating}
+                  loading={isUpdating}
+                  variant="primary"
+                />
+              )}
+            </View>
+          </Animatable.View>
         </View>
-      </ImageBackground>
+      </ScrollView>
 
       {/* Back Button */}
-      <TouchableOpacity 
-        onPress={() => navigation.goBack()}
-        className="absolute top-14 left-4 bg-black/50 p-2 rounded-full"
-      >
-        <Feather name="arrow-left" size={24} color="white" />
-      </TouchableOpacity>
-
-      {/* Story Content */}
-      <View className="p-6">
-        <Text className="text-lg text-stone-700 leading-relaxed font-serif">
-          {story.content}
-        </Text>
-
-        {/* Wisdom Lesson Section */}
-        <View className="mt-8 bg-amber-50 border border-amber-200 rounded-2xl p-5">
-          <View className="flex-row items-center mb-3">
-            <Feather name="award" size={24} color="#c27803" />
-            <Text className="text-xl font-bold text-amber-900 ml-3">The Wisdom Within</Text>
-          </View>
-          <Text className="text-base text-amber-800 italic leading-snug">
-            {story.wisdom_lesson}
-          </Text>
-        </View>
-
-        {/* Action Button */}
-        <View className="mt-8">
-          <Button 
-            title={isCompleted ? 'Wisdom Unlocked' : 'Unlock Wisdom'}
-            onPress={handleUnlockWisdom}
-            disabled={isCompleted || isUpdating}
-            loading={isUpdating}
-            variant={isCompleted ? 'secondary' : 'heritage'}
-            icon={isCompleted ? <Feather name="check-circle" size={18} color="#4d7c0f" /> : null}
-          />
-        </View>
-      </View>
-    </ScrollView>
+      <SafeAreaView edges={['top']} style={styles.backButtonContainer}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <Feather name="arrow-left" size={24} color="white" />
+        </TouchableOpacity>
+      </SafeAreaView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  headerImage: {
+    height: 350,
+    justifyContent: 'flex-end',
+  },
+  gradient: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  headerContent: {
+    padding: 24,
+    paddingBottom: 48,
+  },
+  storyContent: {
+    fontSize: 17,
+    lineHeight: 28,
+    color: '#D1D5DB', // text-gray-300
+    fontFamily: 'Inter_400Regular',
+  },
+  backButtonContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    padding: 8,
+    borderRadius: 999,
+  },
+});

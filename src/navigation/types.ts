@@ -23,8 +23,11 @@ export type MainStackParamList = {
   StoryReader: { storyId: string };
   QuestDetails: { questId: string };
   QuestGameplay: { questId: string };
+  Codex: undefined;
+  Settings: undefined;
 };
 
 // Screen Prop Types
+export type MainStackScreenProps<T extends keyof MainStackParamList> = NativeStackScreenProps<MainStackParamList, T>;
 export type MainStackNavigationProp = NativeStackScreenProps<MainStackParamList>['navigation'];
 export type StoryReaderScreenRouteProp = NativeStackScreenProps<MainStackParamList, 'StoryReader'>['route'];

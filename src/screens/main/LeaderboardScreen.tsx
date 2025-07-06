@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Animatable from 'react-native-animatable';
 import { supabase } from '../../lib/supabase';
+import { CodexScreenSkeleton } from '../../components/codex/CodexScreenSkeleton';
+import Avatar from '../../components/ui/Avatar';
 
 interface LeaderboardEntry {
   id: string;
@@ -9,24 +12,52 @@ interface LeaderboardEntry {
   xp: number;
 }
 
-export const LeaderboardScreen = () => {
+const LeaderboardRow = ({ item, index }: { item: LeaderboardEntry; index: number }) => {
+  const rank = index + 1;
+  const isTopThree = rank <= 3;
+
+  return (
+    <Animatable.View
+      animation="fadeInUp"
+      duration={500}
+      delay={index * 50}
+    >
+      <View
+        className={`flex-row items-center p-3 rounded-lg mb-2 ${
+          isTopThree ? 'bg-primary/20' : 'bg-surface'
+        }`}>
+        <Text className="text-lg font-bold text-text-secondary w-8">{rank}</Text>
+        <Avatar initials={item.username[0]} size={40} />
+        <View className="flex-1 mx-3">
+          <Text className="text-base font-bold text-text-primary">{item.username}</Text>
+        </View>
+        <Text className="text-lg font-bold text-primary">{item.xp.toLocaleString()} XP</Text>
+      </View>
+    </Animatable.View>
+  );
+};
+
+export function LeaderboardScreen() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('leaderboard')
-        .select('*')
-        .order('xp', { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from('profiles') // Assuming 'profiles' table holds user data
+          .select('id, username, xp')
+          .order('xp', { ascending: false })
+          .limit(100);
 
-      if (error) {
-        console.error('Error fetching leaderboard:', error);
-      } else {
+        if (error) throw error;
         setLeaderboard(data as LeaderboardEntry[]);
+      } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchLeaderboard();
@@ -34,34 +65,25 @@ export const LeaderboardScreen = () => {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-surface-dark justify-center items-center">
-        <ActivityIndicator size="large" color="#4ade80" />
+      <SafeAreaView edges={['top']} className="flex-1 bg-background">
+        <CodexScreenSkeleton />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-surface-dark">
-      <View className="p-4">
-        <Text className="text-white text-3xl font-bold mb-4">Leaderboard</Text>
-        <FlatList
-          data={leaderboard}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item, index }) => (
-            <Animatable.View
-              animation="fadeInUp"
-              duration={500}
-              delay={index * 100}
-              useNativeDriver
-              className="flex-row items-center bg-white/10 p-4 rounded-lg mb-2"
-            >
-              <Text className="text-white text-lg font-bold w-10">{index + 1}</Text>
-              <Text className="text-white text-lg flex-1">{item.username}</Text>
-              <Text className="text-accent-green-400 text-lg font-bold">{item.xp} XP</Text>
-            </Animatable.View>
-          )}
-        />
+    <SafeAreaView edges={['top']} className="flex-1 bg-background">
+      <View className="p-6">
+        <Text className="text-4xl font-serif-bold text-text-primary">Hall of Fame</Text>
+        <Text className="text-text-secondary">The most legendary adventurers.</Text>
       </View>
+
+      <FlatList
+        data={leaderboard}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item, index }) => <LeaderboardRow item={item} index={index} />}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 24 }}
+      />
     </SafeAreaView>
   );
-};
+}

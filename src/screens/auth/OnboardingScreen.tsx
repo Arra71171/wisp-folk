@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import LottieView from 'lottie-react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring, withDelay } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -8,13 +9,13 @@ import { Feather } from '@expo/vector-icons';
 
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
 import Button from '../../components/ui/Button';
+import { THEME } from '../../constants/theme';
 
 type OnboardingScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Onboarding'>;
 
 const OnboardingScreen = () => {
   const navigation = useNavigation<OnboardingScreenNavigationProp>();
 
-  // Animation values
   const iconOpacity = useSharedValue(0);
   const iconTranslateY = useSharedValue(20);
   const titleOpacity = useSharedValue(0);
@@ -38,41 +39,86 @@ const OnboardingScreen = () => {
     buttonScale.value = withDelay(800, withSpring(1));
   }, []);
 
-  // Animated styles
   const iconAnimatedStyle = useAnimatedStyle(() => ({ opacity: iconOpacity.value, transform: [{ translateY: iconTranslateY.value }] }));
   const titleAnimatedStyle = useAnimatedStyle(() => ({ opacity: titleOpacity.value, transform: [{ translateY: titleTranslateY.value }] }));
   const subtitleAnimatedStyle = useAnimatedStyle(() => ({ opacity: subtitleOpacity.value, transform: [{ translateY: subtitleTranslateY.value }] }));
   const buttonAnimatedStyle = useAnimatedStyle(() => ({ opacity: buttonOpacity.value, transform: [{ scale: buttonScale.value }] }));
 
   return (
-    <SafeAreaView className="flex-1 bg-background justify-between items-center p-8">
-      <View /> 
-      <View className="items-center">
-        <Animated.View style={iconAnimatedStyle}>
-          <Feather name="wind" size={64} className="text-primary mb-8" />
+    <View style={styles.container}>
+      <LottieView
+        source={require('../../../assets/animations/onboarding-1.json')}
+        autoPlay
+        loop
+        style={styles.lottieBackground}
+      />
+      <SafeAreaView style={styles.safeArea}>
+        <View />
+        <View style={styles.contentContainer}>
+          <Animated.View style={iconAnimatedStyle}>
+            <Feather name="wind" size={64} color={THEME.COLORS.primary} style={styles.icon} />
+          </Animated.View>
+          <Animated.View style={titleAnimatedStyle}>
+            <Text style={styles.title} accessibilityRole="header">
+              Welcome to Wisp
+            </Text>
+          </Animated.View>
+          <Animated.View style={subtitleAnimatedStyle}>
+            <Text style={styles.subtitle}>
+              Uncover the stories of your ancestors and explore the rich tapestry of global folklore.
+            </Text>
+          </Animated.View>
+        </View>
+
+        <Animated.View style={[buttonAnimatedStyle, styles.buttonContainer]}>
+          <Button
+            title="Get Started"
+            onPress={() => navigation.navigate('Login')}
+            accessibilityLabel="Get started"
+            accessibilityHint="Navigates to the login screen"
+          />
         </Animated.View>
-        <Animated.View style={titleAnimatedStyle}>
-          <Text className="text-text-primary text-4xl font-sans font-bold text-center mb-4" accessibilityRole="header">
-            Welcome to Wisp
-          </Text>
-        </Animated.View>
-        <Animated.View style={subtitleAnimatedStyle}>
-          <Text className="text-text-secondary text-lg font-sans text-center">
-            Uncover the stories of your ancestors and explore the rich tapestry of global folklore.
-          </Text>
-        </Animated.View>
-      </View>
-      
-      <Animated.View style={[buttonAnimatedStyle, { width: '100%' }]}>
-        <Button 
-          title="Get Started"
-          onPress={() => navigation.navigate('Login')}
-          accessibilityLabel="Get started"
-          accessibilityHint="Navigates to the login screen"
-        />
-      </Animated.View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  lottieBackground: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  safeArea: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: THEME.SPACING.xl,
+  },
+  contentContainer: {
+    alignItems: 'center',
+  },
+  icon: {
+    marginBottom: THEME.SPACING.xl,
+  },
+  title: {
+    fontFamily: 'CormorantGaramond-Bold',
+    fontSize: 48,
+    color: THEME.COLORS.textPrimary,
+    textAlign: 'center',
+    marginBottom: THEME.SPACING.m,
+  },
+  subtitle: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 18,
+    color: THEME.COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  buttonContainer: {
+    width: '100%',
+  },
+});
 
 export default OnboardingScreen;

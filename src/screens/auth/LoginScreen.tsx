@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,6 +13,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { LoginSchema } from '../../utils/validation';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
+import { THEME } from '../../constants/theme';
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 type FormData = z.infer<typeof LoginSchema>;
@@ -35,16 +36,15 @@ const LoginScreen = () => {
     if (error) {
       Alert.alert('Login Failed', error);
     }
-    // On success, the AppNavigator will automatically switch to the TabNavigator
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}>
-        <View className="items-center mb-10">
-          <Feather name="wind" size={48} className="text-primary" />
-          <Text className="text-text-primary text-4xl font-sans font-bold mt-4">Welcome Back</Text>
-          <Text className="text-text-secondary font-sans text-lg">Sign in to continue your journey.</Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <View style={styles.headerContainer}>
+          <Feather name="wind" size={48} color={THEME.COLORS.primary} />
+          <Text style={styles.title}>Welcome Back</Text>
+          <Text style={styles.subtitle}>Sign in to continue your journey.</Text>
         </View>
 
         <Controller
@@ -80,17 +80,61 @@ const LoginScreen = () => {
           )}
         />
 
-        <Button title="Sign In" onPress={handleSubmit(onSubmit)} loading={loading} style={{ marginTop: 20 }} />
+        <Button title="Sign In" onPress={handleSubmit(onSubmit)} loading={loading} style={styles.button} />
 
-        <TouchableOpacity onPress={() => navigation.navigate('Signup')} className="mt-6 items-center">
-          <Text className="text-center text-text-secondary font-sans">
+        <TouchableOpacity onPress={() => navigation.navigate('Signup')} style={styles.signupContainer}>
+          <Text style={styles.signupText}>
             Don't have an account?{' '}
-            <Text className="text-primary font-sans font-semibold">Sign Up</Text>
+            <Text style={styles.signupLink}>Sign Up</Text>
           </Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: THEME.COLORS.background,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: THEME.SPACING.xl,
+  },
+  headerContainer: {
+    alignItems: 'center',
+    marginBottom: THEME.SPACING.xxl,
+  },
+  title: {
+    fontFamily: 'CormorantGaramond-Bold',
+    fontSize: 40,
+    color: THEME.COLORS.textPrimary,
+    marginTop: THEME.SPACING.m,
+  },
+  subtitle: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 18,
+    color: THEME.COLORS.textSecondary,
+    marginTop: THEME.SPACING.xs,
+  },
+  button: {
+    marginTop: THEME.SPACING.l,
+  },
+  signupContainer: {
+    marginTop: THEME.SPACING.xl,
+    alignItems: 'center',
+  },
+  signupText: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 14,
+    color: THEME.COLORS.textSecondary,
+  },
+  signupLink: {
+    fontFamily: 'Sora-Bold',
+    color: THEME.COLORS.primary,
+  },
+});
 
 export default LoginScreen;

@@ -1,37 +1,62 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { THEME } from '../../constants/theme';
 
 interface BadgeProps {
   icon: React.ReactNode;
   label: string;
-  color?: string;
+  variant?: 'primary' | 'accent' | 'default';
   size?: number;
+  style?: ViewStyle;
 }
 
-const Badge: React.FC<BadgeProps> = ({
-  icon,
-  label,
-  color = '#f59e42', // amber-500
-  size = 40,
-}) => {
+const createStyles = (size: number) =>
+  StyleSheet.create({
+    container: {
+      alignItems: 'center',
+      width: size * 1.5, // Provide some space for the label
+    },
+    iconContainer: {
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      justifyContent: 'center',
+      alignItems: 'center',
+      ...THEME.SHADOWS.light,
+      marginBottom: THEME.SPACING.xs,
+    },
+    labelText: {
+      fontFamily: THEME.FONTS.sans,
+      fontSize: 12,
+      color: THEME.COLORS.textSecondary,
+      textAlign: 'center',
+    },
+  });
+
+const variantStyles = {
+  primary: {
+    backgroundColor: THEME.COLORS.primary,
+  },
+  accent: {
+    backgroundColor: THEME.COLORS.accent,
+  },
+  default: {
+    backgroundColor: THEME.COLORS.surface,
+  },
+};
+
+const Badge: React.FC<BadgeProps> = ({ icon, label, variant = 'default', size = 48, style }) => {
+  const styles = React.useMemo(() => createStyles(size), [size]);
+  const variantStyle = variantStyles[variant];
+
   return (
-    <View className="items-center">
-      <View
-        className="justify-center items-center shadow-md"
-        style={{
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          backgroundColor: color,
-        }}
-      >
+    <View style={[styles.container, style]}>
+      <View style={[styles.iconContainer, { backgroundColor: variantStyle.backgroundColor }]}>
         {icon}
       </View>
-      <Text className="mt-1 text-xs font-medium text-gray-700 dark:text-gray-200 text-center">
-        {label}
-      </Text>
+      <Text style={styles.labelText}>{label}</Text>
     </View>
   );
 };
 
-export default Badge; 
+export default Badge;

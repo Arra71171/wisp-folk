@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, Text } from 'react-native';
+import { Pressable, Text, StyleSheet } from 'react-native';
+import { THEME } from '../../constants/theme';
 
 interface FilterChipProps {
   label: string;
@@ -7,23 +8,46 @@ interface FilterChipProps {
   onPress: () => void;
 }
 
-export const FilterChip = ({ label, isSelected, onPress }: FilterChipProps) => {
+const FilterChip = ({ label, isSelected, onPress }: FilterChipProps) => {
   return (
     <Pressable
       onPress={onPress}
-      className={`px-4 py-2 rounded-full mr-2 border active:scale-95 transition-all duration-200 ${
-        isSelected
-          ? 'bg-primary border-primary shadow-lg shadow-primary/30'
-          : 'bg-surface border-primary/20'
-      }`}
+      style={[styles.container, isSelected ? styles.containerSelected : styles.containerUnselected]}
     >
-      <Text
-        className={`font-sans-medium ${
-          isSelected ? 'text-background' : 'text-text-secondary'
-        }`}
-      >
+      <Text style={[styles.label, isSelected ? styles.labelSelected : styles.labelUnselected]}>
         {label}
       </Text>
     </Pressable>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    paddingVertical: THEME.SPACING.xs,
+    paddingHorizontal: THEME.SPACING.m,
+    borderRadius: THEME.RADIUS.full,
+    marginRight: THEME.SPACING.s,
+    borderWidth: 1,
+  },
+  containerSelected: {
+    backgroundColor: THEME.COLORS.primary,
+    borderColor: THEME.COLORS.primary,
+    ...THEME.SHADOWS.light,
+  },
+  containerUnselected: {
+    backgroundColor: THEME.COLORS.surface,
+    borderColor: THEME.COLORS.border,
+  },
+  label: {
+    fontFamily: THEME.FONTS.sansBold,
+    fontSize: 14,
+  },
+  labelSelected: {
+    color: THEME.COLORS.background,
+  },
+  labelUnselected: {
+    color: THEME.COLORS.textSecondary,
+  },
+});
+
+export default FilterChip;

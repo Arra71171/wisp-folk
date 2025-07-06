@@ -6,9 +6,9 @@ import * as Animatable from 'react-native-animatable';
 interface CodexEntry {
   id: string;
   title: string;
-  category: 'Lore' | 'Characters' | 'Items';
+  category: 'Lore' | 'Characters' | 'Items' | 'Places';
   image: string;
-  height: number;
+  description: string;
 }
 
 interface CodexDetailModalProps {
@@ -44,8 +44,8 @@ export const CodexDetailModal = ({ visible, onClose, entry }: CodexDetailModalPr
           </ImageBackground>
           <ScrollView contentContainerStyle={{ padding: 24 }}>
             <Text className="text-lg font-semibold text-onSurface mb-2">Category: {entry.category}</Text>
-            <Text className="text-base text-onSurface/80 leading-relaxed">
-              This is a placeholder for a detailed description of {entry.title}. Here, we would include rich lore, historical context, or character backstories to immerse the player in the world of WISP.
+            <Text className="text-base text-text-secondary leading-relaxed">
+              {entry.description}
             </Text>
           </ScrollView>
           <Pressable onPress={onClose} className="absolute top-5 right-5 bg-black/40 rounded-full p-2">
